@@ -32,6 +32,7 @@ public class HttpKoupler extends Koupler implements Runnable {
     public void run() {
         post("/:stream", (request, response) -> {
             String event = request.body();
+            LOGGER.info("request body: " + event);
             getOrCreateProducer(request.params(":stream")).queueEvent(event);
             return "ACK\n";
         });

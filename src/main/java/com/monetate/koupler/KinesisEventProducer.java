@@ -121,24 +121,27 @@ public class KinesisEventProducer implements Runnable {
 
     public void send(String event) throws UnsupportedEncodingException {
         String message = getData(event);
+        String partitionKey = getPartitionKey(event);
         byte[] bytes = message.getBytes("UTF-8");
         this.metrics.queueEvent(bytes.length);
         ByteBuffer data = ByteBuffer.wrap(bytes);
-        String partitionKey = getPartitionKey(event);
+        LOGGER.info("JOEY partition key: " + partitionKey);
+        LOGGER.info("JOEY body: " + message);
         if (partitionKey != null) {
-            ListenableFuture<UserRecordResult> f = producer.addUserRecord(streamName, partitionKey, data);
+            ListenableFuture<UserRecordResult> f = producer.addUserRecord(streamName, partitionKey, data.asReadOnlyBuffer());
             Futures.addCallback(f, new FutureCallback<UserRecordResult>() {
                 @Override
                 public void onFailure(Throwable t) {
                     if (t instanceof UserRecordFailedException) {
                         Attempt last = Iterables.getLast(((UserRecordFailedException) t).getResult().getAttempts());
-                        LOGGER.error(String.format("Record failed to put - %s : %s", last.getErrorCode(), last.getErrorMessage()));
+                        LOGGER.error(String.format("JOEY Record failed to put - %s : %s", last.getErrorCode(), last.getErrorMessage()));
                     }
-                    LOGGER.error("Exception during put", t);
+                    LOGGER.error("JOEY Exception during put", t);
                 }
 
                 @Override
                 public void onSuccess(UserRecordResult result) {
+                    LOGGER.info("JOEY Succeeded during put" + result.toString());
                     metrics.ackEvent();
                 }
             });
