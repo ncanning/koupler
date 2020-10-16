@@ -140,7 +140,7 @@ public class KinesisEventProducer implements Runnable {
         LOGGER.info("JOEY partition key: " + partitionKey);
         LOGGER.info("JOEY body: " + data);
         if (partitionKey != null) {
-            ListenableFuture<UserRecordResult> f = producer.addUserRecord(streamName, partitionKey, msg.asReadOnlyBuffer());
+            ListenableFuture<UserRecordResult> f = producer.addUserRecord(streamName, partitionKey, msg);
             Futures.addCallback(f, new FutureCallback<UserRecordResult>() {
                 @Override
                 public void onFailure(Throwable t) {
