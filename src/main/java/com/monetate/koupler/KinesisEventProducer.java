@@ -144,10 +144,10 @@ public class KinesisEventProducer implements Runnable {
             Futures.addCallback(f, new FutureCallback<UserRecordResult>() {
                 @Override
                 public void onFailure(Throwable t) {
-                    if (t instanceof UserRecordFailedException) {
-                        Attempt last = Iterables.getLast(((UserRecordFailedException) t).getResult().getAttempts());
-                        LOGGER.error(String.format("JOEY Record failed to put - %s : %s", last.getErrorCode(), last.getErrorMessage()));
-                    }
+//                    if (t instanceof UserRecordFailedException) {
+//                        Attempt last = Iterables.getLast(((UserRecordFailedException) t).getResult().getAttempts());
+//                        LOGGER.error(String.format("JOEY Record failed to put - %s : %s", last.getErrorCode(), last.getErrorMessage()));
+//                    }
                     LOGGER.error("JOEY Exception during put", t);
                 }
 
