@@ -136,6 +136,7 @@ public class KinesisEventProducer implements Runnable {
         this.metrics.queueEvent(bytes.length);
         ByteBuffer msg = ByteBuffer.wrap(bytes);
 
+        LOGGER.info("JOEY stream name: " + streamName);
         LOGGER.info("JOEY partition key: " + partitionKey);
         LOGGER.info("JOEY body: " + data);
         if (partitionKey != null) {
