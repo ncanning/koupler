@@ -147,10 +147,7 @@ public abstract class Koupler implements Runnable {
         }
 
         String streamName = "";
-        if (!cmd.hasOption("streamName")) {
-            System.err.println("Must specify stream name.");
-            misconfigured = true;
-        } else {
+        if (cmd.hasOption("streamName")) {
             streamName = cmd.getOptionValue("streamName");
         }
 
