@@ -8,10 +8,8 @@ import org.slf4j.LoggerFactory;
 public class HttpKoupler extends Koupler implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpKoupler.class);
 
-    KinesisEventProducer producer = new KinesisEventProducer(format, cmd, propertiesFile, queueSize, appName);
-
-    public HttpKoupler(int port) {
-        super(20);
+    public HttpKoupler(KinesisEventProducer producer, int port) {
+        super(producer, 20);
         LOGGER.info("Firing up HTTP listener on [{}]", port);
     }
     
@@ -20,7 +18,7 @@ public class HttpKoupler extends Koupler implements Runnable {
         post("/:stream", (request, response) -> {
             String event = request.body();
             LOGGER.info("request body: " + event);
-            getOrCreateProducer(request.params(":stream")).queueEvent(event);
+            producer.queueEvent(event);
             return "ACK\n";
         });
     }

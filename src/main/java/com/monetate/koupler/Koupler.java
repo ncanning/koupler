@@ -179,7 +179,7 @@ public abstract class Koupler implements Runnable {
             format = cmd.getOptionValue("format");
         }
 
-        KinesisEventProducer producer = new KinesisEventProducer(format, cmd, propertiesFile, streamName, queueSize, appName);
+        KinesisEventProducer producer = new KinesisEventProducer(format, cmd, propertiesFile, queueSize, appName);
         if (cmd.hasOption("metrics")) {
             producer.startMetrics();
         }
@@ -191,7 +191,7 @@ public abstract class Koupler implements Runnable {
         } else if (cmd.hasOption("udp")) {
             koupler = new UdpKoupler(producer, port);
         } else if (cmd.hasOption("http")) {
-            koupler = new HttpKoupler(port);
+            koupler = new HttpKoupler(producer, port);
         } else if (cmd.hasOption("pipe")) {
             koupler = new PipeKoupler(producer);
         } else if (cmd.hasOption("consumer")) {
