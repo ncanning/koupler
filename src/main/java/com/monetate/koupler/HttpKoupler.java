@@ -16,9 +16,10 @@ public class HttpKoupler extends Koupler implements Runnable {
     @Override
     public void run() {
         post("/:stream", (request, response) -> {
+            String streamName = request.params(":stream");
             String event = request.body();
             LOGGER.info("request body: " + event);
-            producer.queueEvent(event);
+            producer.queueEvent(streamName + "," + event);
             return "ACK\n";
         });
     }
