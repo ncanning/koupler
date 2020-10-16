@@ -5,6 +5,8 @@ package com.monetate.koupler.format;
  */
 public interface Format {
 
+    String getStreamName(String event);
+
     String getPartitionKey(String event);
 
     String getData(String event);

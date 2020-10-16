@@ -6,7 +6,9 @@ import org.apache.commons.cli.CommandLine;
  * Created by brianoneill on 4/29/16.
  */
 public class SplitFormat implements Format {
-    private int partitionKeyField = 0;
+    private int streamNameField = 0;
+    private int partitionKeyField = 1;
+    private int dataField = 2;
     private String delimiter = ",";
 
     /**
@@ -16,21 +18,20 @@ public class SplitFormat implements Format {
         if (cmd.hasOption("delimiter")) {
             delimiter = cmd.getOptionValue("delimiter");
         }
+    }
 
-        if (cmd.hasOption("partitionKeyField")) {
-            partitionKeyField = Integer.parseInt(cmd.getOptionValue("partitionKeyField"));
-        }
+    @Override
+    public String getStreamName(String event) {
+        return event.split(this.delimiter, 3)[streamNameField];
     }
 
     @Override
     public String getPartitionKey(String event) {
-        return event.split(this.delimiter)[partitionKeyField];
+        return event.split(this.delimiter, 3)[partitionKeyField];
     }
 
     @Override
     public String getData(String event) {
-        // This is kind of an assumption for our use case, and could be more
-        // flexible.
-        return event.split(this.delimiter, 2)[1];
+        return event.split(this.delimiter, 3)[dataField];
     }
 }

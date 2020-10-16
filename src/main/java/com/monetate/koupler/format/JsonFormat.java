@@ -9,12 +9,22 @@ import org.apache.commons.cli.CommandLine;
  */
 public class JsonFormat implements Format {
 
+    private String streamNameField;
     private String partitionKeyField;
 
     public JsonFormat(CommandLine cmd) {
         if (cmd.hasOption("partitionKeyField")) {
             partitionKeyField = cmd.getOptionValue("partitionKeyField");
         }
+        if (cmd.hasOption("streamNameField")) {
+            streamNameField = cmd.getOptionValue("streamNameField");
+        }
+    }
+
+    @Override
+    public String getStreamName(String event) {
+        Object jsonEvent = Configuration.defaultConfiguration().jsonProvider().parse(event);
+        return JsonPath.read(jsonEvent, streamNameField);
     }
 
     @Override

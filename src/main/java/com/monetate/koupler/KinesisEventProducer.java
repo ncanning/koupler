@@ -44,11 +44,10 @@ public class KinesisEventProducer implements Runnable {
     }
 
     public KinesisEventProducer(String format, CommandLine cmd,
-                                String propertiesFile, String streamName,
+                                String propertiesFile,
                                 int throttleQueueSize, String appName) {
         this(throttleQueueSize);
         KinesisProducerConfiguration config = KinesisProducerConfiguration.fromPropertiesFile(propertiesFile);
-        this.streamName = streamName;
         this.producer = new KinesisProducer(config);
         this.metrics = new KouplerMetrics(this, config, appName);
         this.format = FormatFactory.getFormat(format, cmd);
@@ -77,6 +76,15 @@ public class KinesisEventProducer implements Runnable {
         this.metrics.start(60);
     }
 
+    public String getStreamName(String event) {
+        try {
+            return format.getStreamName(event);
+        } catch (Exception e) {
+            LOGGER.warn("Received event from which we could NOT extract stream name.", e);
+            return null;
+        }
+    }
+
     public String getPartitionKey(String event) {
         try {
             return format.getPartitionKey(event);
@@ -90,7 +98,7 @@ public class KinesisEventProducer implements Runnable {
         try {
             return format.getData(event);
         } catch (Exception e) {
-            LOGGER.warn("Received event from which we could NOT extractdata.", e);
+            LOGGER.warn("Received event from which we could NOT extract data.", e);
             return null;
         }
     }
@@ -120,15 +128,18 @@ public class KinesisEventProducer implements Runnable {
     }
 
     public void send(String event) throws UnsupportedEncodingException {
-        String message = getData(event);
+        String streamName = getStreamName(event);
+        String data = getData(event);
         String partitionKey = getPartitionKey(event);
-        byte[] bytes = message.getBytes("UTF-8");
+
+        byte[] bytes = data.getBytes("UTF-8");
         this.metrics.queueEvent(bytes.length);
-        ByteBuffer data = ByteBuffer.wrap(bytes);
+        ByteBuffer msg = ByteBuffer.wrap(bytes);
+
         LOGGER.info("JOEY partition key: " + partitionKey);
-        LOGGER.info("JOEY body: " + message);
+        LOGGER.info("JOEY body: " + data);
         if (partitionKey != null) {
-            ListenableFuture<UserRecordResult> f = producer.addUserRecord(streamName, partitionKey, data.asReadOnlyBuffer());
+            ListenableFuture<UserRecordResult> f = producer.addUserRecord(streamName, partitionKey, msg.asReadOnlyBuffer());
             Futures.addCallback(f, new FutureCallback<UserRecordResult>() {
                 @Override
                 public void onFailure(Throwable t) {
