@@ -33,9 +33,7 @@ public class HttpKouplerTest {
         CloseableHttpResponse response = client.execute(post);
         String responseBody = EntityUtils.toString(response.getEntity());
         LOGGER.info("Received [{}] as response from HTTP server.", responseBody);
-        //assertEquals("Did not receive valid response code", 200, response.getStatusLine().getStatusCode());
-        assertEquals("Request should succeed", response.getStatusLine().getStatusCode(), 200);
-        assertEquals("one event received", producer.getCOUNT(), 1);
-
+        assertEquals("Request should succeed", 200, response.getStatusLine().getStatusCode());
+        assertEquals("one event received", 1, producer.getCOUNT());
     }
 }

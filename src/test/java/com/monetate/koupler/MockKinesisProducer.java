@@ -1,6 +1,7 @@
 package com.monetate.koupler;
 
 import com.amazonaws.services.kinesis.producer.KinesisProducer;
+import com.amazonaws.services.kinesis.producer.UserRecord;
 import com.amazonaws.services.kinesis.producer.UserRecordResult;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -18,6 +19,12 @@ public class MockKinesisProducer extends KinesisProducer {
 
     @Override
     public ListenableFuture<UserRecordResult> addUserRecord(String stream, String partitionKey, ByteBuffer data) {
+        COUNT.getAndIncrement();
+        return null;
+    }
+
+    @Override
+    public ListenableFuture<UserRecordResult> addUserRecord(UserRecord userRecord) {
         COUNT.getAndIncrement();
         return null;
     }
