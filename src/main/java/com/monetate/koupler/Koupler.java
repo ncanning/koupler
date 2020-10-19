@@ -21,11 +21,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author brianoneill
  */
-public abstract class Koupler implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Koupler.class);
-    public static final int DEFAULT_BACKOFF = 10; // (in ms)
-    public static final int MAX_BACKOFF = 10000; // ten seconds
-    private static final Random RANDOM = new Random();
+public class Koupler {
 
     public KinesisEventProducer producer;
     private ExecutorService threadPool;
@@ -35,71 +31,7 @@ public abstract class Koupler implements Runnable {
         this.threadPool = Executors.newFixedThreadPool(threadPoolSize);
     }
 
-    public ExecutorService getThreadPool() {
-        return this.threadPool;
-    }
-
-    class KouplerThread implements Callable<Integer> {
-        private BufferedReader bufferedReader;
-        private ExceptionHandler exceptionHandler;
-        private boolean running = true;
-        private int backOff = DEFAULT_BACKOFF;
-
-        public KouplerThread(BufferedReader bufferedReader, ExceptionHandler exceptionHandler) {
-            this.bufferedReader = bufferedReader;
-            this.exceptionHandler = exceptionHandler;
-        }
-
-        public KouplerThread(BufferedReader bufferedReader) {
-            this(bufferedReader, null);
-        }
-
-        @Override
-        public Integer call() {
-            int numOfEvents = 0;
-            Exception error = null;
-            while (running) {
-                try {
-                    String event = bufferedReader.readLine();
-                    if (event != null) {
-                        LOGGER.debug("Queueing event [{}]", event);
-                        producer.queueEvent(event);
-                        numOfEvents++;
-                    } else {
-                        LOGGER.debug("Received null event, dropping socket.");
-                        running = false;
-                    }
-                    backOff = DEFAULT_BACKOFF;
-                } catch (EventQueueFullException eqfe) {
-                    String msg = String.format(
-                            "Internal event queue is full, ingest is outpacing egress. (queue.size=[%d])",
-                            eqfe.getSize());
-                    LOGGER.error(msg);
-                    LOGGER.error("WARNING: Dropping events on floor.");
-                    // In this case, it is a valid event, we just don't have
-                    // room for it
-                    // So we'll continue running until we have room, but will
-                    // delay to see if the queue clears.
-                    try {
-                        LOGGER.warn("Sleeping {}ms waiting for queue to clear.", backOff);
-                        Thread.sleep(backOff);
-                    } catch (InterruptedException ie) {
-                        LOGGER.warn("Insomnia -- can't sleep!", ie);
-                    }
-                    backOff = Math.min(MAX_BACKOFF, backOff * 2) + RANDOM.nextInt(100);
-                } catch (Exception e) {
-                    LOGGER.error("Erroring reading/queuing event [{}]", e);
-                    running = false;
-                    error = e;
-                }
-            }
-            if (exceptionHandler != null)
-                exceptionHandler.handleException(error);
-            return numOfEvents;
-        }
-    }
-
-    public static void main(String[] args) throws ParseException, SocketException {
+    public static void main(String[] args) throws ParseException {
         boolean misconfigured = false;
         Options options = new Options();
 
@@ -132,11 +64,6 @@ public abstract class Koupler implements Runnable {
         }
         if (cmd.hasOption("port")) {
             port = Integer.parseInt(cmd.getOptionValue("port"));
-        }
-
-        String initialPosition = "LATEST";
-        if (cmd.hasOption("position")) {
-            initialPosition = cmd.getOptionValue("position");
         }
 
         // Check to see they specified one of (udp, tcp http, or pipe)
@@ -178,27 +105,10 @@ public abstract class Koupler implements Runnable {
             producer.startMetrics();
         }
 
-        Koupler koupler = null;
-        boolean server = true;
-        if (cmd.hasOption("tcp")) {
-            koupler = new TcpKoupler(producer, port);
-        } else if (cmd.hasOption("udp")) {
-            koupler = new UdpKoupler(producer, port);
-        } else if (cmd.hasOption("http")) {
-            koupler = new HttpKoupler(producer, port, propertiesFile);
-        } else if (cmd.hasOption("pipe")) {
-            koupler = new PipeKoupler(producer);
-        } else if (cmd.hasOption("consumer")) {
+        HttpKoupler koupler = new HttpKoupler(port, propertiesFile, null);
 
-            KinesisEventConsumer consumer = new KinesisEventConsumer(propertiesFile, streamName, appName,
-                    initialPosition);
-            consumer.start();
-        }
-
-        if (server) {
-            Thread kouplerThread = new Thread(koupler);
-            kouplerThread.start();
-        }
+        Thread kouplerThread = new Thread(koupler);
+        kouplerThread.start();
     }
 
 }

@@ -10,15 +10,18 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
-public class HttpKoupler extends Koupler implements Runnable {
+public class HttpKoupler implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpKoupler.class);
 
     KinesisProducer theProducer;
 
-    public HttpKoupler(KinesisEventProducer producer, int port, String propertiesFile) {
-        super(producer, 20);
+    public HttpKoupler(int port, String propertiesFile, KinesisProducer producer) {
         KinesisProducerConfiguration config = KinesisProducerConfiguration.fromPropertiesFile(propertiesFile);
-        theProducer = new KinesisProducer(config);
+        if (producer == null) {
+            theProducer = new KinesisProducer(config);
+        } else {
+            theProducer = producer;
+        }
         LOGGER.info("Firing up HTTP listener on [{}]", port);
     }
     
