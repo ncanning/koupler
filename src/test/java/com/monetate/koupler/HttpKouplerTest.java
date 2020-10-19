@@ -1,7 +1,5 @@
 package com.monetate.koupler;
 
-import static org.junit.Assert.assertEquals;
-
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
@@ -13,14 +11,15 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.junit.Assert.assertEquals;
+
 public class HttpKouplerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpKouplerTest.class);
 
     @Test
     public void testRest() throws Exception {
-        String propertiesFile = "./conf/kpl.properties";
         MockKinesisProducer producer = new MockKinesisProducer();
-        Thread server = new Thread(new HttpKoupler(4567, propertiesFile, producer));
+        Thread server = new Thread(new HttpKoupler(4567, producer));
         server.start();
         Thread.sleep(1000);
 

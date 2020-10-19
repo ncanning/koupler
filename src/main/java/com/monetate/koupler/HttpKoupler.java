@@ -1,7 +1,5 @@
 package com.monetate.koupler;
 
-import static spark.Spark.post;
-
 import com.amazonaws.services.kinesis.producer.KinesisProducer;
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration;
 import com.amazonaws.services.kinesis.producer.UserRecord;
@@ -10,18 +8,21 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 
+import static spark.Spark.post;
+
 public class HttpKoupler implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpKoupler.class);
 
     KinesisProducer producer;
 
-    public HttpKoupler(int port, String propertiesFile, KinesisProducer producer) {
+    public HttpKoupler(int port, KinesisProducer producer) {
+        this.producer = producer;
+        LOGGER.info("Firing up HTTP listener on [{}]", port);
+    }
+
+    public HttpKoupler(int port, String propertiesFile) {
         KinesisProducerConfiguration config = KinesisProducerConfiguration.fromPropertiesFile(propertiesFile);
-        if (producer == null) {
-            this.producer = new KinesisProducer(config);
-        } else {
-            this.producer = producer;
-        }
+        this.producer = new KinesisProducer(config);
         LOGGER.info("Firing up HTTP listener on [{}]", port);
     }
     
