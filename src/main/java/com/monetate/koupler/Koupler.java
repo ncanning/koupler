@@ -26,6 +26,8 @@ public class Koupler {
     public static void main(String[] args) throws ParseException {
         Options options = new Options();
 
+        options.addOption("http", false, "http mode");
+
         String propertiesFile = "./conf/kpl.properties";
         options.addOption("propertiesFile", true, "kpl properties file (default: " + propertiesFile + ")");
 

@@ -4,6 +4,7 @@ import static spark.Spark.post;
 
 import com.amazonaws.services.kinesis.producer.KinesisProducer;
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration;
+import com.amazonaws.services.kinesis.producer.UserRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +36,11 @@ public class HttpKoupler implements Runnable {
             byte[] bytes = data.getBytes("UTF-8");
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
 
+            UserRecord record = new UserRecord(streamName, partitionKey, buffer.asReadOnlyBuffer());
+
             LOGGER.info("request body: " + data);
             LOGGER.info("request partition key: " + partitionKey);
-            producer.addUserRecord(streamName, partitionKey, buffer.asReadOnlyBuffer());
+            producer.addUserRecord(record);
             return "ACK\n";
         });
     }
