@@ -4,7 +4,6 @@ import static spark.Spark.post;
 
 import com.amazonaws.services.kinesis.producer.KinesisProducer;
 import com.amazonaws.services.kinesis.producer.KinesisProducerConfiguration;
-import com.monetate.koupler.format.SplitFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,14 +12,14 @@ import java.nio.ByteBuffer;
 public class HttpKoupler implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpKoupler.class);
 
-    KinesisProducer theProducer;
+    KinesisProducer producer;
 
     public HttpKoupler(int port, String propertiesFile, KinesisProducer producer) {
         KinesisProducerConfiguration config = KinesisProducerConfiguration.fromPropertiesFile(propertiesFile);
         if (producer == null) {
-            theProducer = new KinesisProducer(config);
+            this.producer = new KinesisProducer(config);
         } else {
-            theProducer = producer;
+            this.producer = producer;
         }
         LOGGER.info("Firing up HTTP listener on [{}]", port);
     }
@@ -38,7 +37,7 @@ public class HttpKoupler implements Runnable {
 
             LOGGER.info("request body: " + data);
             LOGGER.info("request partition key: " + partitionKey);
-            theProducer.addUserRecord(streamName, partitionKey, buffer);
+            producer.addUserRecord(streamName, partitionKey, buffer.asReadOnlyBuffer());
             return "ACK\n";
         });
     }
